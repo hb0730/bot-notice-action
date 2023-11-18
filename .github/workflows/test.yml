@@ -117,7 +117,8 @@ jobs:
                 #### 构建信息
                 > - 应用名称:  ${{ github.repository }}
                 > - 分支名称:  ${{ github.ref }}
-                <at user_id="all">所有人</at> 
+                
+                > <at user_id="all">所有人</at> 
             header:
               title:
                 content: '构建信息'
