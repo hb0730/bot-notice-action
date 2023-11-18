@@ -51,7 +51,7 @@ jobs:
                   text: "请查看"
                   href: "http://www.example.com/"
                 - tag: "at"
-                user_id: "ou_18eac8********17ad4f02e8bbbb"
+                  user_id: "ou_18eac8********17ad4f02e8bbbb"
       - name: share_chat simplified test
         uses: ./
         if: always()
@@ -196,7 +196,7 @@ jobs:
             source:
               icon_url: "https://wework.qpic.cn/wwpic/252813_jOfDHtcISzuodLa_1629280209/0"
               desc: "企业微信"
-              desc_color: "0"
+              desc_color: 0
             main_title:
               title: "欢迎使用企业微信"
               desc: "您的好友正在邀请您加入企业微信"
@@ -209,7 +209,9 @@ jobs:
               appid: "APPID"
               pagepath: "PAGEPATH"
               title: "引用文本标题"
-              quote_text: "Jack：企业微信真的很好用~\nBalian：超级好的一款软件！"
+            quote_text: |-
+              Jack：企业微信真的很好用~
+              Balian：超级好的一款软件！
             sub_title_text: "下载企业微信还能抢红包！"
             horizontal_content_list:
             - keyname: "邀请人"
@@ -231,7 +233,7 @@ jobs:
               pagepath: "PAGEPATH"
               title: "跳转小程序"
             card_action:
-            - type: 1
+              type: 1
               url: "https://work.weixin.qq.com/?from=openApi"
               appid: "APPID"
               pagepath: "PAGEPATH"
