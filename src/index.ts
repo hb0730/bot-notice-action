@@ -25,6 +25,7 @@ function readInputs(): BotOptions {
     secret: core.getInput('secret'),
     bot: core.getInput('bot'),
     msg_type: core.getInput('msg_type'),
+    simplified: (core.getInput('simplified') as 'true') === 'true',
     content: core.getInput('content')
   }
 }

@@ -16,6 +16,10 @@ inputs:
     required: false
     description: 'The msg type,default: text'
     default: 'text'
+  simplified:
+    required: false
+    description: 'The content is simplified'
+    default: 'true'
   content:
     required: false
     description: 'The content'

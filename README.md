@@ -11,12 +11,12 @@
     msg_type: text
     bot: 'feishu'
     content: |
-        hahahah
-        from github action test
-        repository: ${{ github.repository }}
-        committer: ${{ github.actor }}
-        compare: ${{ github.event.compare }}
-        job status: ${{ job.status }}
+      hahahah
+      from github action test
+      repository: ${{ github.repository }}
+      committer: ${{ github.actor }}
+      compare: ${{ github.event.compare }}
+      job status: ${{ job.status }}
 ```
 
 - post
@@ -108,13 +108,13 @@ Contexts and expression syntax for GitHub Actions, here: <https://help.github.co
 
 ## Options
 
-| option   | type   | description                                                                 |
-| -------- | ------ | --------------------------------------------------------------------------- |
-| bot      | string | bot type,feishu,dingtalk,wechat,default feishu                              |
-| webhook  | string | bot webhook                                                                 |
-| secret   | string | bot secret                                                                  |
-| msg_type | string | message type                                                                |
-| content  | string | message content , yaml string                                               |
+| option   | type   | description                                    |
+| -------- | ------ | ---------------------------------------------- |
+| bot      | string | bot type,feishu,dingtalk,wechat,default feishu |
+| webhook  | string | bot webhook                                    |
+| secret   | string | bot secret                                     |
+| msg_type | string | message type                                   |
+| content  | string | message content , yaml string                  |
 
 ## bot type
 

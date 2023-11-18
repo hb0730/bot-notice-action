@@ -3,7 +3,7 @@ on: # rebuild any PRs and main branch changes
   pull_request:
   push:
     branches:
-      - master
+      - main
       - 'releases/*'
       - 'v*'
 jobs:
@@ -22,66 +22,220 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Text Tests
+      - name: text simplified test
         uses: ./
+        if: always()
         with:
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
-          bot: 'feishu'
-          msg_type: 'text'
-          content: |
-            hahahah
-            from github action test
-            repository: ${{ github.repository }}
-            committer: ${{ github.actor }}
-            compare: ${{ github.event.compare }}
-            job status: ${{ job.status }}
-      - name: Post Test
+          bot: feishu
+          msg_type: text
+          simplified: true
+          content: 'Hello World'
+      - name: post simplified test
         uses: ./
+        if: always()
         with:
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
-          bot: 'feishu'
-          msg_type: 'post'
+          bot: feishu
+          msg_type: post
+          simplified: true
           content: |
-            post:
-              zh_cn:
-                title: 我是一个标题
-                content:
-                - - tag: text
-                    un_escape: true
-                    text: '第一行&nbsp;:'
-                  - tag: a
-                    text: 超链接 repo
-                    href: ${{ github.repository }}
-                  - tag: at
-                    user_id: ou_18eac85d35a26f989317ad4f02e8bbbb
-                - - tag: text
-                    text: '第二行 :'
-                  - tag: text
-                    text: 文本测试
-                - - tag: img
-                    image_key: d640eeea-4d2f-4cb3-88d8-c964fab53987
-                    width: 300
-                    height: 300
-      - name: Md Test
+            zh_cn:
+              title: "项目更新通知"
+              content:
+              - tag: "text"
+                text: "项目有更新: "
+              - tag: "a"
+                text: "请查看"
+                href: "http://www.example.com/"
+              - tag: "at"
+                user_id: "ou_18eac8********17ad4f02e8bbbb"
+      - name: share_chat simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: feishu
+          msg_type: share_chat
+          simplified: true
+          content: 'oc_f5b1a7eb27ae2****339ff'
+      - name: image simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: feishu
+          msg_type: image
+          simplified: true
+          content: 'img_ecffc3b9-8f14-400f-a014-05eca1a4310g'
+      - name: interactive simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: feishu
+          msg_type: interactive
+          simplified: true
+          content: |
+            elements:
+            - tag: "div"
+              text:
+                content: "**西湖**，位于浙江省杭州市西湖区龙井路1号，杭州市区西部，景区总面积49平方千米，汇水面积为21.22平方千米，湖面面积为6.38平方千米。"
+                tag: "lark_md"
+            - actions:
+              - tag: "button"
+                text: 
+                  content: "更多景点介绍 :玫瑰:"
+                  tag: "lark_md"
+                url: "https://www.example.com"
+                type: "default"
+                value: 
+              tag: "action"
+            header:
+              title:
+                content: "今日旅游推荐"
+                tag: "plain_text"
+      - name: md simplified test
         id: md-test
+        if: always()
         uses: ./
         with:
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
-          bot: 'feishu'
-          msg_type: 'interactive'
+          bot: feishu
+          msg_type: interactive
+          simplified: true
           content: |
             elements:
             - tag: markdown
               content: |
                 #### 构建信息
                 > - 应用名称:  ${{ github.repository }}
+                > - 分支名称:  ${{ github.ref }}
+                <at user_id="all">所有人</at> 
             header:
               title:
                 content: '构建信息'
                 tag: plain_text
       - name: output
+        if: always()
+        run: |
+          echo ${{steps.md-test.outputs.response}}
+  wechat-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: text simplified test
+        uses: ./
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: text
+          simplified: true
+          content: 'Hello World'
+      - name: markdown simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: markdown
+          simplified: true
+          content: |
+            `实时新增用户反馈<font color=\"warning\">132例</font>，请相关同事注意。\n
+               >类型:<font color=\"comment\">用户反馈</font>
+               >普通用户反馈:<font color=\"comment\">117例</font>
+               >VIP用户反馈:<font color=\"comment\">15例</font>`
+      - name: image  simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: image
+          simplified: true
+          content: 'img_ecffc3b9-8f14-400f-a014-05eca1a4310g'
+      - name: news simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: news
+          simplified: true
+          content: |
+            articles:
+              - title: "中秋节礼品领取"
+                description: "今年中秋节公司有豪礼相送"
+                url: "www.qq.com"
+                picurl: "http://res.mail.qq.com/node/ww/wwopenmng/images/independent/doc/test_pic_msg1.png"
+      - name: file simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: file
+          simplified: true
+          content: '3a8asd892asd8asd'
+      - name: template_card simplified test
+        uses: ./
+        if: always()
+        with:
+          webhook: ${{ secrets.WECHAT_WEBHOOK }}
+          bot: wechat
+          msg_type: template_card
+          simplified: true
+          content: |
+            card_type: "text_notice"
+              source:
+                icon_url: "https://wework.qpic.cn/wwpic/252813_jOfDHtcISzuodLa_1629280209/0"
+                desc: "企业微信"
+                desc_color: "0"
+              main_title:
+                title: "欢迎使用企业微信"
+                desc: "您的好友正在邀请您加入企业微信"
+              emphasis_content:
+                title: "100"
+                desc: "数据含义"
+              quote_area:
+                type: 1
+                url: "https://work.weixin.qq.com/?from=openApi"
+                appid: "APPID"
+                pagepath: "PAGEPATH"
+                title: "引用文本标题"
+                quote_text: "Jack：企业微信真的很好用~\nBalian：超级好的一款软件！"
+              sub_title_text: "下载企业微信还能抢红包！"
+              horizontal_content_list:
+              - keyname: "邀请人"
+                value: "张三"
+              - keyname: "企微官网"
+                value: "点击访问"
+                type: 1
+                url: "https://work.weixin.qq.com/?from=openApi"
+              - keyname: "企微下载"
+                value: "企业微信.apk"
+                type: 2
+                media_id: "MEDIAID"
+              jump_list:
+              - type: 1
+                url: "https://work.weixin.qq.com/?from=openApi"
+                title: "企业微信官网"
+              - type: 2
+                appid: "APPID"
+                pagepath: "PAGEPATH"
+                title: "跳转小程序"
+              card_action:
+              - type: 1
+                url: "https://work.weixin.qq.com/?from=openApi"
+                appid: "APPID"
+                pagepath: "PAGEPATH"
+      - name: output
+        if: always()
         run: |
           echo ${{steps.md-test.outputs.response}}

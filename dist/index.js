@@ -35635,7 +35635,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FeishuBot = exports.DefaultBot = void 0;
+exports.WechatBot = exports.FeishuBot = exports.DefaultBot = void 0;
 const crypto_js_1 = __importDefault(__nccwpck_require__(4134));
 const utils_1 = __importDefault(__nccwpck_require__(1314));
 const http = __importStar(__nccwpck_require__(6255));
@@ -35649,10 +35649,24 @@ var BotTypeEnum;
 })(BotTypeEnum || (BotTypeEnum = {}));
 var MsgTypeEnum;
 (function (MsgTypeEnum) {
+    // supported Feishu,Wechat
     MsgTypeEnum["text"] = "text";
+    // supported: Feishu
     MsgTypeEnum["post"] = "post";
+    // supported: Feishu
+    MsgTypeEnum["share_chat"] = "share_chat";
+    // supported: Feishu
     MsgTypeEnum["interactive"] = "interactive";
+    // supported: Feishu,Wechat
     MsgTypeEnum["image"] = "image";
+    // supported: Wechat
+    MsgTypeEnum["markdown"] = "markdown";
+    // supported: Wechat
+    MsgTypeEnum["news"] = "news";
+    // supported: Wechat
+    MsgTypeEnum["file"] = "file";
+    // supported: Wechat
+    MsgTypeEnum["template_card"] = "template_card";
 })(MsgTypeEnum || (MsgTypeEnum = {}));
 /**
  * Default bot,自动适配
@@ -35671,13 +35685,18 @@ class DefaultBot {
             feishuClient.secret = this.botOptions.secret;
             botClient = feishuClient;
         }
+        else if (botType === BotTypeEnum.wechat) {
+            core.debug('Adapting Wechat Bot');
+            const wechatClient = new WechatBot(this.botOptions.webhook);
+            botClient = wechatClient;
+        }
         else {
             throw new Error(`Unsupported bot type: ${botType}`);
         }
         if (!botClient) {
             throw new Error(`Unsupported bot type: ${botType}`);
         }
-        return botClient.send(this.botOptions.msg_type, this.botOptions.content);
+        return botClient.send(this.botOptions.msg_type, this.botOptions.content, this.botOptions.simplified === true);
     }
 }
 exports.DefaultBot = DefaultBot;
@@ -35692,29 +35711,31 @@ class FeishuBot {
         this.webhook = webhook;
         this._client = new http.HttpClient('bot-notice-action/1.0.0');
     }
-    /**
-     *  Send message
-     * @param msgType message type
-     * @param content  message content, can be json or yaml
-     * @returns response
-     */
-    async send(msgType, content) {
-        const _msgType = MsgTypeEnum[msgType];
+    async send(msgType, content, simplified) {
         let _response = '';
-        if (_msgType === MsgTypeEnum.text) {
-            _response = await this.sendText(content);
-        }
-        else if (_msgType === MsgTypeEnum.interactive) {
-            _response = await this.post({
-                msg_type: 'interactive',
-                card: js_yaml_1.default.load(content)
-            });
+        if (!simplified) {
+            _response = await this.sendMessage(msgType, content);
         }
         else {
-            _response = await this.post({
-                msg_type: _msgType,
-                content: js_yaml_1.default.load(content)
-            });
+            const _msgType = MsgTypeEnum[msgType];
+            if (_msgType === MsgTypeEnum.text) {
+                _response = await this.sendText(content);
+            }
+            else if (_msgType === MsgTypeEnum.post) {
+                _response = await this.sendPost(content);
+            }
+            else if (_msgType === MsgTypeEnum.share_chat) {
+                _response = await this.sendShareChat(content);
+            }
+            else if (_msgType === MsgTypeEnum.interactive) {
+                _response = await this.sendInteractive(content);
+            }
+            else if (_msgType === MsgTypeEnum.image) {
+                _response = await this.sendImage(content);
+            }
+            else {
+                throw new Error(`Unsupported msg type: ${_msgType}`);
+            }
         }
         const { code, msg } = JSON.parse(_response);
         return {
@@ -35722,12 +35743,82 @@ class FeishuBot {
             msg
         };
     }
+    /**
+     *  发送消息
+     * @param msgType  消息类型
+     * @param content  消息内容,未简化的内容，支持yaml,json
+     * @returns  发送响应
+     */
+    async sendMessage(msgType, content) {
+        const message = js_yaml_1.default.load(content);
+        message.msg_type = msgType;
+        return await this.post(message);
+    }
+    /**
+     *  发送文本
+     * @param text 文本内容
+     * @returns  发送响应
+     */
     async sendText(text) {
         const message = {
             msg_type: 'text',
             content: {
-                text
+                text: text
             }
+        };
+        return await this.post(message);
+    }
+    /**
+     * 发送富文本消息
+     * @param content 富文本内容,格式内存为: {zh_cn:{},en_us:{}}
+     * @returns 发送响应
+     */
+    async sendPost(content) {
+        const message = {
+            msg_type: 'post',
+            content: {
+                post: js_yaml_1.default.load(content)
+            }
+        };
+        return await this.post(message);
+    }
+    /**
+     *  发送分享群
+     * @param content 群 ID
+     * @returns  发送响应
+     */
+    async sendShareChat(content) {
+        const message = {
+            msg_type: 'share_chat',
+            content: {
+                share_chat_id: content
+            }
+        };
+        return await this.post(message);
+    }
+    /**
+     *  发送图片
+     * @param content  图片内容,格式内存为: 'img_ecffc3b9'
+     * @returns
+     */
+    async sendImage(content) {
+        const message = {
+            msg_type: 'image',
+            content: {
+                image_key: content
+            }
+        };
+        return await this.post(message);
+    }
+    /**
+     *  发送消息卡片
+     * @param content  消息卡片内容，格式内存为: {elements:[], header:{}}
+     * @returns  发送响应
+     */
+    async sendInteractive(content) {
+        const message = {
+            msg_type: 'interactive',
+            card: js_yaml_1.default.load(content)
         };
         return await this.post(message);
     }
@@ -35750,6 +35841,110 @@ class FeishuBot {
     }
 }
 exports.FeishuBot = FeishuBot;
+class WechatBot {
+    webhook;
+    _client;
+    constructor(webhook) {
+        this.webhook = webhook;
+        this._client = new http.HttpClient('bot-notice-action/1.0.0');
+    }
+    async send(msgType, content, simplified) {
+        let _response = '';
+        if (!simplified) {
+            _response = await this.sendMessage(msgType, content);
+        }
+        else {
+            const _msgType = MsgTypeEnum[msgType];
+            if (_msgType === MsgTypeEnum.text) {
+                _response = await this.sendText(content);
+            }
+            else if (_msgType === MsgTypeEnum.image) {
+                _response = await this.sendImage(content);
+            }
+            else if (_msgType === MsgTypeEnum.markdown) {
+                _response = await this.sendMarkdown(content);
+            }
+            else if (_msgType === MsgTypeEnum.news) {
+                _response = await this.sendNews(content);
+            }
+            else if (_msgType === MsgTypeEnum.file) {
+                _response = await this.sendFile(content);
+            }
+            else if (_msgType === MsgTypeEnum.template_card) {
+                _response = await this.sendTemplateCard(content);
+            }
+            else {
+                throw new Error(`Unsupported msg type: ${_msgType}`);
+            }
+        }
+        const { errcode, errmsg } = JSON.parse(_response);
+        return {
+            success: errcode === 0,
+            msg: errmsg
+        };
+    }
+    async sendMessage(msgType, content) {
+        const message = js_yaml_1.default.load(content);
+        message.msgtype = msgType;
+        return await this.post(message);
+    }
+    async sendText(text) {
+        const message = {
+            msgtype: 'text',
+            text: {
+                content: text
+            }
+        };
+        return await this.post(message);
+    }
+    async sendMarkdown(content) {
+        const message = {
+            msgtype: 'markdown',
+            markdown: {
+                content: content
+            }
+        };
+        return await this.post(message);
+    }
+    async sendImage(content) {
+        const message = {
+            msgtype: 'image',
+            image: js_yaml_1.default.load(content)
+        };
+        return await this.post(message);
+    }
+    async sendNews(content) {
+        const message = {
+            msgtype: 'news',
+            news: js_yaml_1.default.load(content)
+        };
+        return await this.post(message);
+    }
+    async sendFile(content) {
+        const message = {
+            msgtype: 'file',
+            file: {
+                media_id: content
+            }
+        };
+        return await this.post(message);
+    }
+    async sendTemplateCard(content) {
+        const message = {
+            msgtype: 'template_card',
+            template_card: js_yaml_1.default.load(content)
+        };
+        return await this.post(message);
+    }
+    async post(message) {
+        core.debug(`send message: ${JSON.stringify(message)}`);
+        const response = await this._client.post(this.webhook, JSON.stringify(message), {
+            'Content-type': 'application/json'
+        });
+        return response.readBody();
+    }
+}
+exports.WechatBot = WechatBot;
 
 
 /***/ }),
@@ -35811,6 +36006,7 @@ function readInputs() {
         secret: core.getInput('secret'),
         bot: core.getInput('bot'),
         msg_type: core.getInput('msg_type'),
+        simplified: core.getInput('simplified') === 'true',
         content: core.getInput('content')
     };
 }
