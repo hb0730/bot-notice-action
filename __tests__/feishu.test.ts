@@ -68,16 +68,16 @@ describe('feishu action test', () => {
           return 'post'
         case 'content':
           return `
-                zh_cn:
-                  title: "项目更新通知"
-                  content:
-                  - tag: "text"
-                    text: "项目有更新: "
-                  - tag: "a"
-                    text: "请查看"
-                    href: "http://www.example.com/"
-                  - tag: "at"
-                    user_id: "ou_18eac8********17ad4f02e8bbbb"
+           zh_cn:
+             title: "项目更新通知"
+             content:
+             - - tag: "text"
+                 text: "项目有更新: "
+               - tag: "a"
+                 text: "请查看"
+                 href: "http://www.example.com/"
+               - tag: "at"
+                 user_id: "ou_18eac8********17ad4f02e8bbbb"
               `
         case 'simplified':
           return 'true'
@@ -105,13 +105,13 @@ describe('feishu action test', () => {
                  zh_cn:
                    title: "项目更新通知"
                    content:
-                   - tag: "text"
-                     text: "项目有更新: "
-                   - tag: "a"
-                     text: "请查看"
-                     href: "http://www.example.com/"
-                   - tag: "at"
-                     user_id: "ou_18eac8********17ad4f02e8bbbb"
+                   - - tag: "text"
+                       text: "项目有更新: "
+                     - tag: "a"
+                       text: "请查看"
+                       href: "http://www.example.com/"
+                     - tag: "at"
+                       user_id: "ou_18eac8********17ad4f02e8bbbb"
               `
         case 'simplified':
           return 'false'
