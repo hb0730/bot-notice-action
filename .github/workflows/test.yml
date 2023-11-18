@@ -65,6 +65,7 @@ jobs:
                     width: 300
                     height: 300
       - name: Md Test
+        id: md-test
         uses: ./
         with:
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
@@ -82,3 +83,6 @@ jobs:
                 title:
                   content: '构建信息'
                   tag: plain_text
+      - name: output
+        run: |
+          echo ${{steps.md-test.outputs.response}}
