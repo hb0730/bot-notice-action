@@ -35663,7 +35663,7 @@ class DefaultBot {
         const botType = BotTypeEnum[this.botOptions.bot];
         let botClient;
         if (botType === BotTypeEnum.feishu) {
-            core.info('Adapting Feishu Bot');
+            core.debug('Adapting Feishu Bot');
             const feishuClient = new FeishuBot(this.botOptions.webhook);
             feishuClient.secret = this.botOptions.secret;
             botClient = feishuClient;
@@ -35728,7 +35728,7 @@ class FeishuBot {
             message.timestamp = timestamp;
             message.sign = this.genSign(timestamp);
         }
-        core.info('Send message ....');
+        core.debug(`send message: ${JSON.stringify(message)}`);
         const response = await this._client.post(this.webhook, JSON.stringify(message), {
             'Content-type': 'application/json'
         });
