@@ -28,5 +28,5 @@ runs:
   main: 'dist/index.js'
 
 branding:
-  color: 'blue'
-  icon: 'message-square'
+  color: 'purple'
+  icon: 'bell'
