@@ -94,13 +94,13 @@ export class FeishuBot implements Bot {
     let _response = ''
     if (_msgType === MsgTypeEnum.text) {
       _response = await this.sendText(content)
-    }else if(_msgType===MsgTypeEnum.interactive){
-      _response=await this.post({
+    } else if (_msgType === MsgTypeEnum.interactive) {
+      _response = await this.post({
         msg_type: 'interactive',
         card: yaml.load(content)
       })
-    }else{
-      _response=await this.post({
+    } else {
+      _response = await this.post({
         msg_type: _msgType,
         content: yaml.load(content)
       })

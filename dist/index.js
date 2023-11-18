@@ -35650,6 +35650,9 @@ var BotTypeEnum;
 var MsgTypeEnum;
 (function (MsgTypeEnum) {
     MsgTypeEnum["text"] = "text";
+    MsgTypeEnum["post"] = "post";
+    MsgTypeEnum["interactive"] = "interactive";
+    MsgTypeEnum["image"] = "image";
 })(MsgTypeEnum || (MsgTypeEnum = {}));
 /**
  * Default bot,自动适配
@@ -35701,9 +35704,15 @@ class FeishuBot {
         if (_msgType === MsgTypeEnum.text) {
             _response = await this.sendText(content);
         }
+        else if (_msgType === MsgTypeEnum.interactive) {
+            _response = await this.post({
+                msg_type: 'interactive',
+                card: js_yaml_1.default.load(content)
+            });
+        }
         else {
             _response = await this.post({
-                msg_type: msgType,
+                msg_type: _msgType,
                 content: js_yaml_1.default.load(content)
             });
         }
