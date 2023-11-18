@@ -6,35 +6,43 @@ on: # rebuild any PRs and main branch changes
       - master
       - 'releases/*'
       - 'v*'
-
 jobs:
-  build: # make sure build/ci work properly
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: |
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: |
           npm install
           npm run all
-  test: # make sure the action works on a clean machine without building
+  feishu-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: ./
+      - uses: actions/checkout@v3
+      - name: Text Tests
+        uses: ./
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
-          msg_type: text
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: 'feishu'
+          msg_type: 'text'
           content: |
-            text: |
-              hahahah
-              from github action test
-              repository: ${{ github.repository }}
-              committer: ${{ github.actor }}
-              compare: ${{ github.event.compare }}
-              job status: ${{ job.status }}
-      - uses: ./
+            hahahah
+            from github action test
+            repository: ${{ github.repository }}
+            committer: ${{ github.actor }}
+            compare: ${{ github.event.compare }}
+            job status: ${{ job.status }}
+      - name: Post Test
+        uses: ./
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
-          msg_type: post
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: 'feishu'
+          msg_type: 'post'
           content: |
             post:
               zh_cn:
@@ -56,15 +64,21 @@ jobs:
                     image_key: d640eeea-4d2f-4cb3-88d8-c964fab53987
                     width: 300
                     height: 300
-      - uses: ./
+      - name: Md Test
+        uses: ./
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
-          msg_type: share_chat
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          secret: ${{ secrets.FEISHU_SECRET }}
+          bot: 'feishu'
+          msg_type: 'interactive'
           content: |
-            share_chat_id: oc_f5b1a7eb27ae2c7b6adc2a74faf339ff
-      - uses: ./
-        with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
-          msg_type: image
-          content: |
-            image_key: img_ecffc3b9-8f14-400f-a014-05eca1a4310g
+            card:
+              elements:
+              - tag: markdown
+                content: |
+                  #### 构建信息
+                  > - 应用名称:  ${{ github.repository }}
+              header:
+                title:
+                  content: '构建信息'
+                  tag: plain_text
