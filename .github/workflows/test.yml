@@ -73,16 +73,15 @@ jobs:
           bot: 'feishu'
           msg_type: 'interactive'
           content: |
-            card:
-              elements:
-              - tag: markdown
-                content: |
-                  #### 构建信息
-                  > - 应用名称:  ${{ github.repository }}
-              header:
-                title:
-                  content: '构建信息'
-                  tag: plain_text
+            elements:
+            - tag: markdown
+              content: |
+                #### 构建信息
+                > - 应用名称:  ${{ github.repository }}
+            header:
+              title:
+                content: '构建信息'
+                tag: plain_text
       - name: output
         run: |
           echo ${{steps.md-test.outputs.response}}

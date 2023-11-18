@@ -9,7 +9,10 @@ enum BotTypeEnum {
   wechat = 'wechat'
 }
 enum MsgTypeEnum {
-  text = 'text'
+  text = 'text',
+  post = 'post',
+  interactive = 'interactive',
+  image = 'image'
 }
 /**
  * Bot options
@@ -64,7 +67,8 @@ export class DefaultBot {
  */
 interface FeishuMessage {
   msg_type: string
-  content: any
+  content?: any
+  card?: any
   timestamp?: string
   sign?: string
 }
@@ -90,9 +94,14 @@ export class FeishuBot implements Bot {
     let _response = ''
     if (_msgType === MsgTypeEnum.text) {
       _response = await this.sendText(content)
-    } else {
-      _response = await this.post({
-        msg_type: msgType,
+    }else if(_msgType===MsgTypeEnum.interactive){
+      _response=await this.post({
+        msg_type: 'interactive',
+        card: yaml.load(content)
+      })
+    }else{
+      _response=await this.post({
+        msg_type: _msgType,
         content: yaml.load(content)
       })
     }
