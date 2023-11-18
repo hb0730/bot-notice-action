@@ -4,12 +4,13 @@
 
 ```yml
 - name: text message
-  uses: foxundermoon/feishu-action@v2
+  uses: hb0730/bot-notice-action
   with:
-    url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
+    webhook: ${{ secrets.FEISHU_WEBHOOK }}
+    secret: ${{ secrets.FEISHU_SECRET }}
     msg_type: text
+    bot: 'feishu'
     content: |
-      text: |
         hahahah
         from github action test
         repository: ${{ github.repository }}
@@ -22,10 +23,12 @@
 
 ```yml
 - name: post message
-  uses: foxundermoon/feishu-action@v2
+  uses: hb0730/bot-notice-action
   with:
-    url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
+    webhook: ${{ secrets.FEISHU_WEBHOOK }}
+    secret: ${{ secrets.FEISHU_SECRET }}
     msg_type: post
+    bot: 'feishu'
     content: |
       post:
         zh_cn:
@@ -53,10 +56,12 @@
 
 ```yml
 - name: share_chat message
-  uses: foxundermoon/feishu-action@v2
+  uses: hb0730/bot-notice-action
   with:
-    url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
+    webhook: ${{ secrets.FEISHU_WEBHOOK }}
+    secret: ${{ secrets.FEISHU_SECRET }}
     msg_type: share_chat
+    bot: 'feishu'
     content: |
       share_chat_id: oc_f5b1a7eb27ae2c7b6adc2a74faf339ff
 ```
@@ -65,12 +70,34 @@
 
 ```yml
 - name: image message
-  uses: foxundermoon/feishu-action@v2
+  uses: hb0730/bot-notice-action
   with:
-    url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
+    webhook: ${{ secrets.FEISHU_WEBHOOK }}
+    secret: ${{ secrets.FEISHU_SECRET }}
     msg_type: image
+    bot: 'feishu'
     content: |
       image_key: img_ecffc3b9-8f14-400f-a014-05eca1a4310g
+```
+
+```yaml
+- name: interactive message
+  uses: hb0730/bot-notice-action
+  with:
+    webhook: ${{ secrets.FEISHU_WEBHOOK }}
+    secret: ${{ secrets.FEISHU_SECRET }}
+    msg_type: interactive
+    bot: 'feishu'
+    content: |
+      elements:
+        - tag: markdown
+          content: |
+            #### 构建信息
+            > - 应用名称:  ${{ github.repository }}
+        header:
+          title:
+            content: '构建信息'
+            tag: plain_text
 ```
 
 🔐 Set your secrets here: `https://github.com/USERNAME/REPO/settings/secrets`.
@@ -83,8 +110,27 @@ Contexts and expression syntax for GitHub Actions, here: <https://help.github.co
 
 | option   | type   | description                                                                 |
 | -------- | ------ | --------------------------------------------------------------------------- |
-| url      | string | webhook url: <https://open.feishu.cn/open-apis/bot/hook/7c5a4a4ba83bxxxxxx> |
+| bot      | string | bot type,feishu,dingtalk,wechat,default feishu                              |
+| webhook  | string | bot webhook                                                                 |
+| secret   | string | bot secret                                                                  |
 | msg_type | string | message type                                                                |
 | content  | string | message content , yaml string                                               |
+
+## bot type
+
+- [x] [feishu](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot)
+
+- [ ] [dingtalk](https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq)
+- [ ] [wechat](https://work.weixin.qq.com/api/doc/90000/90136/91770)
+
+## message type
+
+### feishu
+
+- [x] text
+- [x] post
+- [x] share_chat
+- [x] image
+- [x] interactive
 
 > [How do I use a robot in a group chat?](https://getfeishu.cn/hc/zh-cn/articles/360024984973-%E5%9C%A8%E7%BE%A4%E8%81%8A%E4%B8%AD%E4%BD%BF%E7%94%A8%E6%9C%BA%E5%99%A8%E4%BA%BA)
