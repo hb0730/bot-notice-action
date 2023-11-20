@@ -1,4 +1,4 @@
-## ✨ Example  Usage By Simplified Content
+## ✨ Example Usage By Simplified Content
 
 more example see tests
 
@@ -32,14 +32,14 @@ Contexts and expression syntax for GitHub Actions, here: <https://help.github.co
 
 ## Options
 
-| option   | type   | description                                    |
-| -------- | ------ | ---------------------------------------------- |
-| bot      | string | bot type,feishu,dingtalk,wechat,default feishu |
-|simplified| boolean| simplified content,default true                |
-| webhook  | string | bot webhook                                    |
-| secret   | string | bot secret                                     |
-| msg_type | string | message type                                   |
-| content  | string | message content , yaml string                  |
+| option     | type    | description                                    |
+| ---------- | ------- | ---------------------------------------------- |
+| bot        | string  | bot type,feishu,dingtalk,wechat,default feishu |
+| simplified | boolean | simplified content,default true                |
+| webhook    | string  | bot webhook                                    |
+| secret     | string  | bot secret                                     |
+| msg_type   | string  | message type                                   |
+| content    | string  | message content , yaml string                  |
 
 ## bot type
 
