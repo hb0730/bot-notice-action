@@ -185,12 +185,11 @@ class FeishuBot implements Bot {
         default:
           break
       }
-      if (at_all){
+      if (at_all) {
         content = utils.renderTemplate(content, {'@all': at_all})
-      }else{
+      } else {
         content = utils.renderTemplate(content, {'@all': ''})
       }
-
     }
     let _response = ''
     // 非简化的内容
@@ -349,9 +348,9 @@ class WechatBot implements Bot {
         default:
           break
       }
-      if (at_all){
+      if (at_all) {
         content = utils.renderTemplate(content, {'@all': at_all})
-      }else{
+      } else {
         content = utils.renderTemplate(content, {'@all': ''})
       }
     }

@@ -35756,8 +35756,12 @@ class FeishuBot {
                 default:
                     break;
             }
-            if (at_all)
+            if (at_all) {
                 content = utils_1.default.renderTemplate(content, { '@all': at_all });
+            }
+            else {
+                content = utils_1.default.renderTemplate(content, { '@all': '' });
+            }
         }
         let _response = '';
         // 非简化的内容
@@ -35906,8 +35910,12 @@ class WechatBot {
                 default:
                     break;
             }
-            if (at_all)
-                content = utils_1.default.renderTemplate(message.content, { '@all': at_all });
+            if (at_all) {
+                content = utils_1.default.renderTemplate(content, { '@all': at_all });
+            }
+            else {
+                content = utils_1.default.renderTemplate(content, { '@all': '' });
+            }
         }
         let _response = '';
         if (!message.simplified) {
