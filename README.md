@@ -43,17 +43,17 @@ Contexts and expression syntax for GitHub Actions, here: <https://help.github.co
 
 ## Options
 
-| option     | type    | description                                    |
-| ---------- | ------- | ---------------------------------------------- |
-| job_status | string  | Actions build status (e.g. success, failure, cancelled)|
-| bot        | string  | bot type,feishu,dingtalk,wechat,default feishu |
-| simplified | boolean | simplified content,default true                |
-| webhook    | string  | bot webhook                                    |
-| secret     | string  | bot secret                                     |
-| msg_type   | string  | message type                                   |
-| content    | string  | message content , yaml string                  |
-|on_notification|boolean|when to notify, default: always, "always", "success", "failure", "cancelled",default 'always'                  |
-|on_failure_at_all|boolean|on failure at all,default true,template string ${@all} will be replaced|
+| option            | type    | description                                                                                   |
+| ----------------- | ------- | --------------------------------------------------------------------------------------------- |
+| job_status        | string  | Actions build status (e.g. success, failure, cancelled)                                       |
+| bot               | string  | bot type,feishu,dingtalk,wechat,default feishu                                                |
+| simplified        | boolean | simplified content,default true                                                               |
+| webhook           | string  | bot webhook                                                                                   |
+| secret            | string  | bot secret                                                                                    |
+| msg_type          | string  | message type                                                                                  |
+| content           | string  | message content , yaml string                                                                 |
+| on_notification   | boolean | when to notify, default: always, "always", "success", "failure", "cancelled",default 'always' |
+| on_failure_at_all | boolean | on failure at all,default true,template string ${@all} will be replaced                       |
 
 ## bot type
 
