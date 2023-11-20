@@ -8,20 +8,31 @@ more example see tests
 # feishu
 uses: hb0730/bot-notice-action
 with:
+  job_status: ${{job.status}}
+  on_notification: 'always'
+  on_failure_at_all: true
   webhook: ${{ secrets.FEISHU_WEBHOOK }}
   secret: ${{ secrets.FEISHU_SECRET }}
   bot: feishu
   msg_type: text
   simplified: true
-  content: 'Hello World'
+  content: 'Hello World ${@all}'
 # wechat
 uses: hb0730/bot-notice-action
 with:
+  job_status: ${{job.status}}
+  on_notification: 'always'
+  on_failure_at_all: true
+  simplified: false
   webhook: ${{ secrets.WECHAT_WEBHOOK }}
   bot: wechat
   msg_type: text
   simplified: true
-  content: 'Hello World'
+  content: |
+    text:
+      content: "Hello world"
+      mentioned_list:
+      - "\${@all\}"`
 ```
 
 🔐 Set your secrets here: `https://github.com/USERNAME/REPO/settings/secrets`.
@@ -34,12 +45,15 @@ Contexts and expression syntax for GitHub Actions, here: <https://help.github.co
 
 | option     | type    | description                                    |
 | ---------- | ------- | ---------------------------------------------- |
+| job_status | string  | Actions build status (e.g. success, failure, cancelled)|
 | bot        | string  | bot type,feishu,dingtalk,wechat,default feishu |
 | simplified | boolean | simplified content,default true                |
 | webhook    | string  | bot webhook                                    |
 | secret     | string  | bot secret                                     |
 | msg_type   | string  | message type                                   |
 | content    | string  | message content , yaml string                  |
+|on_notification|boolean|when to notify, default: always, "always", "success", "failure", "cancelled",default 'always'                  |
+|on_failure_at_all|boolean|on failure at all,default true,template string ${@all} will be replaced|
 
 ## bot type
 

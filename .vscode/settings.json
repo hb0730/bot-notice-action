@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-action.json": "file:///Users/hb0730/development/hb0730/vscode/bot-notice-action/action.yml"
+  }
+}

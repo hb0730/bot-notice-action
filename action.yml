@@ -13,7 +13,7 @@ inputs:
     description: 'The bot type,default: feishu'
     default: 'feishu'
   msg_type:
-    required: false
+    required: true
     description: 'The msg type,default: text'
     default: 'text'
   simplified:
@@ -24,6 +24,17 @@ inputs:
     required: false
     description: 'The content'
     default: 'Hello World'
+  job_status:
+    required: true
+    description: 'Actions build status (e.g. success, failure, cancelled)'
+  on_notification:
+    required: true
+    description: 'when to notify, default: always, "always", "success", "failure", "cancelled"'
+    default: 'always'
+  on_failure_at_all:
+    required: false
+    description: 'Only on failure at all, default: false,template string ${@all} will be replaced'
+    default: 'true'
 outputs:
   response:
     description: 'The bot response'

@@ -32,10 +32,12 @@ jobs:
           msg_type: text
           simplified: true
           content: 'Hello World'
+          job_status: ${{ job.status }}
       - name: post simplified test
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
           bot: feishu
@@ -56,6 +58,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
           bot: feishu
@@ -66,6 +69,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
           bot: feishu
@@ -76,6 +80,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
           bot: feishu
@@ -105,6 +110,9 @@ jobs:
         if: always()
         uses: ./
         with:
+          job_status: ${{ job.status }}
+          on_notification: failure
+          on_failure_at_all: true
           webhook: ${{ secrets.FEISHU_WEBHOOK }}
           secret: ${{ secrets.FEISHU_SECRET }}
           bot: feishu
@@ -117,7 +125,8 @@ jobs:
                 #### 构建信息
                 > - 应用名称:  ${{ github.repository }}
                 > - 分支名称:  ${{ github.ref }}
-                \n<at id=all></at>
+
+                ${@all}
             header:
               title:
                 content: '构建信息'
@@ -133,6 +142,7 @@ jobs:
       - name: text simplified test
         uses: ./
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: text
@@ -142,6 +152,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: markdown
@@ -155,6 +166,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: image
@@ -164,6 +176,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: news
@@ -178,6 +191,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: file
@@ -187,6 +201,7 @@ jobs:
         uses: ./
         if: always()
         with:
+          job_status: ${{ job.status }}
           webhook: ${{ secrets.WECHAT_WEBHOOK }}
           bot: wechat
           msg_type: template_card

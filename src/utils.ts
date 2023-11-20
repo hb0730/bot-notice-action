@@ -22,9 +22,29 @@ function genTimeStamp10(): string {
   const timestamp = Date.now()
   return String(timestamp).slice(0, 10)
 }
+/**
+ *  渲染模板，替换变量
+ * @param value 内容,如"hello ${name}+${age}"
+ * @param data 模板变量,{name: "张三", age: 18}
+ * @returns 替换后的内容
+ */
+function renderTemplate(value: string, data: any) {
+  const keys = Object.keys(data)
+  const dataList = keys.map(function (key) {
+    return data[key]
+  })
+  for (var i = 0; i < keys.length; i++) {
+    value = value.replace(
+      new RegExp('\\$\\{' + keys[i] + '\\}', 'gm'),
+      dataList[i]
+    )
+  }
+  return value
+}
 
 export default {
   exits,
   isString,
-  genTimeStamp10
+  genTimeStamp10,
+  renderTemplate
 }

@@ -1,14 +1,28 @@
-import CryptoJS from 'crypto-js'
-import utils from './utils'
+import * as core from '@actions/core'
 import * as http from '@actions/http-client'
 import yaml from 'js-yaml'
-import * as core from '@actions/core'
-enum BotTypeEnum {
-  feishu = 'feishu',
-  dingtalk = 'dingtalk',
-  wechat = 'wechat'
+import CryptoJS from 'crypto-js'
+import utils from './utils'
+
+export enum JobStatus {
+  SUCCESS = 'success',
+  FAILED = 'failure',
+  CANCELLED = 'cancelled',
+  UNKNOWN = 'unknown'
 }
-enum MsgTypeEnum {
+export enum BuildNotification {
+  ALWAYS = 'always',
+  SUCCESS = 'success',
+  FAILED = 'failure',
+  CANCELLED = 'cancelled',
+  NEVER = 'never'
+}
+export enum BotType {
+  WECHAT = 'wechat',
+  FEISHU = 'feishu',
+  DINGTALK = 'dingtalk'
+}
+export enum MsgType {
   // supported Feishu,Wechat
   text = 'text',
   // supported: Feishu
@@ -29,15 +43,49 @@ enum MsgTypeEnum {
   template_card = 'template_card'
 }
 /**
- * Bot options
+ * bot options
  */
 export interface BotOptions {
+  /**
+   * bot webhook
+   */
   webhook: string
+  /**
+   * bot secret
+   */
   secret?: string
-  bot?: string
-  simplified?: boolean
-  msg_type: string
+  /**
+   * bot type
+   */
+  bot: BotType
+}
+export interface Message extends JobOptions {
+  /**
+   * content is simplified
+   */
+  simplified: boolean
+  /**
+   * msg type
+   */
+  msgType: MsgType
+  /**
+   * content
+   */
   content: string
+  /**
+   * build failed at all
+   */
+  failedAtAll: boolean
+}
+export interface JobOptions {
+  /**
+   * job status
+   */
+  jobStatus: JobStatus
+  /**
+   * build notification
+   */
+  onNotification: BuildNotification
 }
 /**
  * Bot response
@@ -46,103 +94,122 @@ export interface BotResponse {
   success: boolean
   msg: string
 }
-/**
- * Bot interface
- */
-interface Bot {
+
+export interface Bot {
   /**
-   *  发送消息
-   * @param msgType  消息类型
-   * @param content  消息内容
+   * send message
+   * @param message
    */
-  send(msgType: string, content: string): Promise<BotResponse>
-  /**
-   * 发送消息
-   * @param msgType 消息类型
-   * @param content  消息内容
-   * @param simplified  内容是否已经简化，默认为false
-   */
-  send(
-    msgType: string,
-    content: string,
-    simplified?: boolean
-  ): Promise<BotResponse>
+  send(message: Message): Promise<BotResponse>
 }
-/**
- * Default bot,自动适配
- */
+
 export class DefaultBot {
-  private botOptions: BotOptions
-  constructor(botOptions: BotOptions) {
-    this.botOptions = botOptions
+  private options: BotOptions
+  constructor(options: BotOptions) {
+    this.options = options
   }
-  start(): Promise<BotResponse> {
-    const botType = BotTypeEnum[this.botOptions.bot as keyof typeof BotTypeEnum]
-    let botClient: Bot | undefined
-    if (botType === BotTypeEnum.feishu) {
-      core.debug('Adapting Feishu Bot')
-      const feishuClient = new FeishuBot(this.botOptions.webhook)
-      feishuClient.secret = this.botOptions.secret
-      botClient = feishuClient
-    } else if (botType === BotTypeEnum.wechat) {
-      core.debug('Adapting Wechat Bot')
-      const wechatClient = new WechatBot(this.botOptions.webhook)
-      botClient = wechatClient
-    } else {
-      throw new Error(`Unsupported bot type: ${botType}`)
+
+  start(message: Message): Promise<BotResponse> {
+    let botClient: Bot
+    switch (this.options.bot) {
+      case BotType.WECHAT:
+        core.debug(`Adapting to WechatBot`)
+        botClient = new WechatBot(this.options)
+        break
+      case BotType.FEISHU:
+        core.debug(`Adapting to FeishuBot`)
+        botClient = new FeishuBot(this.options)
+        break
+      default:
+        throw new Error(`unknown bot type: ${this.options.bot}`)
     }
     if (!botClient) {
-      throw new Error(`Unsupported bot type: ${botType}`)
+      throw new Error(`unknown bot type: ${this.options.bot}`)
     }
-    return botClient.send(
-      this.botOptions.msg_type,
-      this.botOptions.content,
-      this.botOptions.simplified === true
-    )
+    switch (message.onNotification) {
+      case BuildNotification.ALWAYS:
+        return botClient.send(message)
+      case BuildNotification.SUCCESS:
+        if (message.jobStatus === JobStatus.SUCCESS) {
+          return botClient.send(message)
+        }
+      case BuildNotification.FAILED:
+        if (message.jobStatus === JobStatus.FAILED) {
+          return botClient.send(message)
+        }
+      case BuildNotification.CANCELLED:
+        if (message.jobStatus === JobStatus.CANCELLED) {
+          return botClient.send(message)
+        }
+      case BuildNotification.NEVER:
+      default:
+        core.debug(
+          `skip sending message, onNotification: ${message.onNotification}, jobStatus: ${message.jobStatus}`
+        )
+        return Promise.resolve({
+          success: true,
+          msg: 'success'
+        })
+    }
   }
 }
-/**
- * Feishu message
- */
+
 interface FeishuMessage {
-  msg_type: string
-  [key: string]: any
+  msg_type: MsgType
   timestamp?: string
   sign?: string
+  [key: string]: any
 }
-/**
- * Feishu bot
- */
-export class FeishuBot implements Bot {
-  private webhook: string
-  secret?: string
-  private _client: http.HttpClient
-  constructor(webhook: string) {
-    this.webhook = webhook
-    this._client = new http.HttpClient('bot-notice-action/1.0.0')
+class FeishuBot implements Bot {
+  private options: BotOptions
+  private client: http.HttpClient
+  constructor(options: BotOptions) {
+    this.options = options
+    this.client = new http.HttpClient()
   }
-  async send(
-    msgType: string,
-    content: string,
-    simplified?: boolean
-  ): Promise<BotResponse> {
+  async send(message: Message): Promise<BotResponse> {
+    let content = message.content
+    if (!content) {
+      throw new Error('content is empty')
+    }
+    // 失败时at所有人
+    if (message.failedAtAll && message.jobStatus === JobStatus.FAILED) {
+      let at_all = ``
+      switch (message.msgType) {
+        case MsgType.text:
+          at_all = `<at user_id="all">所有人</at> `
+          break
+        case MsgType.interactive:
+          at_all = `<at id=all></at>`
+          break
+        default:
+          break
+      }
+      if (at_all) content = utils.renderTemplate(content, {'@all': at_all})
+    }
     let _response = ''
-    if (!simplified) {
-      _response = await this.sendMessage(msgType, content)
+    // 非简化的内容
+    if (!message.simplified) {
+      _response = await this.sendMessage(message.msgType, content)
     } else {
-      const _msgType = MsgTypeEnum[msgType as keyof typeof MsgTypeEnum]
-      if (_msgType === MsgTypeEnum.text) {
-        _response = await this.sendText(content)
-      } else if (_msgType === MsgTypeEnum.post) {
-        _response = await this.sendPost(content)
-      } else if (_msgType === MsgTypeEnum.share_chat) {
-        _response = await this.sendShareChat(content)
-      } else if (_msgType === MsgTypeEnum.interactive) {
-        _response = await this.sendInteractive(content)
-      } else if (_msgType === MsgTypeEnum.image) {
-        _response = await this.sendImage(content)
-      } else {
-        throw new Error(`Unsupported msg type: ${_msgType}`)
+      switch (message.msgType) {
+        case MsgType.text:
+          _response = await this.sendText(content)
+          break
+        case MsgType.post:
+          _response = await this.sendPost(content)
+          break
+        case MsgType.share_chat:
+          _response = await this.sendShareChat(content)
+          break
+        case MsgType.image:
+          _response = await this.sendImage(content)
+          break
+        case MsgType.interactive:
+          _response = await this.sendInteractive(content)
+          break
+        default:
+          throw new Error(`unsupport message type: ${message.msgType}`)
       }
     }
     const {code, msg} = JSON.parse(_response)
@@ -157,7 +224,10 @@ export class FeishuBot implements Bot {
    * @param content  消息内容,未简化的内容，支持yaml,json
    * @returns  发送响应
    */
-  private async sendMessage(msgType: string, content: string): Promise<string> {
+  private async sendMessage(
+    msgType: MsgType,
+    content: string
+  ): Promise<string> {
     const message: FeishuMessage = yaml.load(content) as FeishuMessage
     message.msg_type = msgType
     return await this.post(message)
@@ -169,7 +239,7 @@ export class FeishuBot implements Bot {
    */
   private async sendText(text: string): Promise<string> {
     const message: FeishuMessage = {
-      msg_type: 'text',
+      msg_type: MsgType.text,
       content: {
         text: text
       }
@@ -183,7 +253,7 @@ export class FeishuBot implements Bot {
    */
   private async sendPost(content: string): Promise<string> {
     const message: FeishuMessage = {
-      msg_type: 'post',
+      msg_type: MsgType.post,
       content: {
         post: yaml.load(content)
       }
@@ -197,7 +267,7 @@ export class FeishuBot implements Bot {
    */
   private async sendShareChat(content: string): Promise<string> {
     const message: FeishuMessage = {
-      msg_type: 'share_chat',
+      msg_type: MsgType.share_chat,
       content: {
         share_chat_id: content
       }
@@ -211,14 +281,13 @@ export class FeishuBot implements Bot {
    */
   private async sendImage(content: string): Promise<string> {
     const message: FeishuMessage = {
-      msg_type: 'image',
+      msg_type: MsgType.image,
       content: {
         image_key: content
       }
     }
     return await this.post(message)
   }
-
   /**
    *  发送消息卡片
    * @param content  消息卡片内容，格式内存为: {elements:[], header:{}}
@@ -226,71 +295,83 @@ export class FeishuBot implements Bot {
    */
   private async sendInteractive(content: string): Promise<string> {
     const message: FeishuMessage = {
-      msg_type: 'interactive',
+      msg_type: MsgType.interactive,
       card: yaml.load(content)
     }
     return await this.post(message)
   }
-
   private async post(message: FeishuMessage): Promise<string> {
-    if (utils.exits(this.secret)) {
+    if (utils.exits(this.options.secret)) {
       const timestamp = utils.genTimeStamp10()
       message.timestamp = timestamp
       message.sign = this.genSign(timestamp)
     }
     core.debug(`send message: ${JSON.stringify(message)}`)
-    const response = await this._client.post(
-      this.webhook,
+    const response = await this.client.post(
+      this.options.webhook,
       JSON.stringify(message),
       {
-        'Content-type': 'application/json'
+        'Content-Type': 'application/json'
       }
     )
     return response.readBody()
   }
-
   private genSign(timestamp: string): string {
-    const key = `${timestamp}\n${this.secret}`
+    const key = `${timestamp}\n${this.options.secret}`
     const signature = CryptoJS.HmacSHA256('', key).toString(CryptoJS.enc.Base64)
     return signature
   }
 }
 interface WechatMessage {
-  msgtype: string
+  msgtype: MsgType
   [key: string]: any
 }
-
-export class WechatBot implements Bot {
-  private webhook: string
-  private _client: http.HttpClient
-  constructor(webhook: string) {
-    this.webhook = webhook
-    this._client = new http.HttpClient('bot-notice-action/1.0.0')
+class WechatBot implements Bot {
+  private options: BotOptions
+  private client: http.HttpClient
+  constructor(options: BotOptions) {
+    this.options = options
+    this.client = new http.HttpClient()
   }
-  async send(
-    msgType: string,
-    content: string,
-    simplified?: boolean
-  ): Promise<BotResponse> {
+  async send(message: Message): Promise<BotResponse> {
+    let content = message.content
+    if (message.failedAtAll && message.jobStatus === JobStatus.FAILED) {
+      let at_all = ''
+      switch (message.msgType) {
+        case MsgType.text:
+          at_all = '@all'
+          break
+        default:
+          break
+      }
+      if (at_all)
+        content = utils.renderTemplate(message.content, {'@all': at_all})
+    }
     let _response = ''
-    if (!simplified) {
-      _response = await this.sendMessage(msgType, content)
+    if (!message.simplified) {
+      _response = await this.sendMessage(message.msgType, content)
     } else {
-      const _msgType = MsgTypeEnum[msgType as keyof typeof MsgTypeEnum]
-      if (_msgType === MsgTypeEnum.text) {
-        _response = await this.sendText(content)
-      } else if (_msgType === MsgTypeEnum.image) {
-        _response = await this.sendImage(content)
-      } else if (_msgType === MsgTypeEnum.markdown) {
-        _response = await this.sendMarkdown(content)
-      } else if (_msgType === MsgTypeEnum.news) {
-        _response = await this.sendNews(content)
-      } else if (_msgType === MsgTypeEnum.file) {
-        _response = await this.sendFile(content)
-      } else if (_msgType === MsgTypeEnum.template_card) {
-        _response = await this.sendTemplateCard(content)
-      } else {
-        throw new Error(`Unsupported msg type: ${_msgType}`)
+      switch (message.msgType) {
+        case MsgType.text:
+          _response = await this.sendText(content)
+          break
+        case MsgType.markdown:
+          _response = await this.sendMarkdown(content)
+          break
+        case MsgType.image:
+          _response = await this.sendImage(content)
+          break
+        case MsgType.news:
+          _response = await this.sendNews(content)
+          break
+        case MsgType.file:
+          _response = await this.sendFile(content)
+          break
+        case MsgType.template_card:
+          _response = await this.sendTemplateCard(content)
+          break
+        default:
+          throw new Error(`unsupport message type: ${message.msgType}`)
       }
     }
     const {errcode, errmsg} = JSON.parse(_response)
@@ -299,25 +380,26 @@ export class WechatBot implements Bot {
       msg: errmsg
     }
   }
-  private async sendMessage(msgType: string, content: string): Promise<string> {
+  private async sendMessage(
+    msgType: MsgType,
+    content: string
+  ): Promise<string> {
     const message: WechatMessage = yaml.load(content) as WechatMessage
     message.msgtype = msgType
     return await this.post(message)
   }
-
   private async sendText(text: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'text',
+      msgtype: MsgType.text,
       text: {
         content: text
       }
     }
     return await this.post(message)
   }
-
   private async sendMarkdown(content: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'markdown',
+      msgtype: MsgType.markdown,
       markdown: {
         content: content
       }
@@ -326,21 +408,21 @@ export class WechatBot implements Bot {
   }
   private async sendImage(content: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'image',
+      msgtype: MsgType.image,
       image: yaml.load(content)
     }
     return await this.post(message)
   }
   private async sendNews(content: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'news',
+      msgtype: MsgType.news,
       news: yaml.load(content)
     }
     return await this.post(message)
   }
   private async sendFile(content: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'file',
+      msgtype: MsgType.file,
       file: {
         media_id: content
       }
@@ -349,18 +431,18 @@ export class WechatBot implements Bot {
   }
   private async sendTemplateCard(content: string): Promise<string> {
     const message: WechatMessage = {
-      msgtype: 'template_card',
+      msgtype: MsgType.template_card,
       template_card: yaml.load(content)
     }
     return await this.post(message)
   }
   private async post(message: WechatMessage): Promise<string> {
     core.debug(`send message: ${JSON.stringify(message)}`)
-    const response = await this._client.post(
-      this.webhook,
+    const response = await this.client.post(
+      this.options.webhook,
       JSON.stringify(message),
       {
-        'Content-type': 'application/json'
+        'Content-Type': 'application/json'
       }
     )
     return response.readBody()
