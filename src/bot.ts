@@ -187,10 +187,13 @@ class FeishuBot implements Bot {
       }
       if (at_all) {
         content = utils.renderTemplate(content, {'@all': at_all})
-      } else {
-        content = utils.renderTemplate(content, {'@all': ''})
       }
     }
+     // 成功时取消at所有人
+    if(message.failedAtAll && message.jobStatus === JobStatus.SUCCESS){
+      content = utils.renderTemplate(content, {'@all': ''})
+    }
+    
     let _response = ''
     // 非简化的内容
     if (!message.simplified) {
@@ -350,10 +353,13 @@ class WechatBot implements Bot {
       }
       if (at_all) {
         content = utils.renderTemplate(content, {'@all': at_all})
-      } else {
-        content = utils.renderTemplate(content, {'@all': ''})
       }
     }
+    // 成功时取消at所有人
+    if(message.failedAtAll && message.jobStatus === JobStatus.SUCCESS){
+      content = utils.renderTemplate(content, {'@all': ''})
+    }
+
     let _response = ''
     if (!message.simplified) {
       _response = await this.sendMessage(message.msgType, content)
