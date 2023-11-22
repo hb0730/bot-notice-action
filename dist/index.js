@@ -35759,9 +35759,10 @@ class FeishuBot {
             if (at_all) {
                 content = utils_1.default.renderTemplate(content, { '@all': at_all });
             }
-            else {
-                content = utils_1.default.renderTemplate(content, { '@all': '' });
-            }
+        }
+        // 成功时取消at所有人
+        if (message.failedAtAll && message.jobStatus === JobStatus.SUCCESS) {
+            content = utils_1.default.renderTemplate(content, { '@all': '' });
         }
         let _response = '';
         // 非简化的内容
@@ -35913,9 +35914,10 @@ class WechatBot {
             if (at_all) {
                 content = utils_1.default.renderTemplate(content, { '@all': at_all });
             }
-            else {
-                content = utils_1.default.renderTemplate(content, { '@all': '' });
-            }
+        }
+        // 成功时取消at所有人
+        if (message.failedAtAll && message.jobStatus === JobStatus.SUCCESS) {
+            content = utils_1.default.renderTemplate(content, { '@all': '' });
         }
         let _response = '';
         if (!message.simplified) {

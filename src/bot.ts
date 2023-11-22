@@ -189,11 +189,11 @@ class FeishuBot implements Bot {
         content = utils.renderTemplate(content, {'@all': at_all})
       }
     }
-     // 成功时取消at所有人
-    if(message.failedAtAll && message.jobStatus === JobStatus.SUCCESS){
+    // 成功时取消at所有人
+    if (message.failedAtAll && message.jobStatus === JobStatus.SUCCESS) {
       content = utils.renderTemplate(content, {'@all': ''})
     }
-    
+
     let _response = ''
     // 非简化的内容
     if (!message.simplified) {
@@ -356,7 +356,7 @@ class WechatBot implements Bot {
       }
     }
     // 成功时取消at所有人
-    if(message.failedAtAll && message.jobStatus === JobStatus.SUCCESS){
+    if (message.failedAtAll && message.jobStatus === JobStatus.SUCCESS) {
       content = utils.renderTemplate(content, {'@all': ''})
     }
 
